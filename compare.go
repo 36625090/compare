@@ -17,21 +17,21 @@ type Comparable interface {
 		~float32 | ~float64 | ~string
 }
 
-type CmpMode int
+type Mode int
 
 const (
-	CmpModeLess         CmpMode = -1
-	CmpModeLessEqual    CmpMode = -10
-	CmpModeEqual        CmpMode = 0
-	CmpModeGreater      CmpMode = 1
-	CmpModeGreaterEqual CmpMode = 10
+	ModeLess         Mode = -1
+	ModeLessEqual    Mode = -10
+	ModeEqual        Mode = 0
+	ModeGreater      Mode = 1
+	ModeGreaterEqual Mode = 10
 )
 
 type Serializer interface {
 	HashCode() int
 }
 
-func Compare[T any](i, j T, mode CmpMode) bool {
+func Compare[T any](i, j T, mode Mode) bool {
 	iValue := reflect.ValueOf(i)
 	jValue := reflect.ValueOf(j)
 
@@ -42,36 +42,36 @@ func Compare[T any](i, j T, mode CmpMode) bool {
 			case Serializer:
 				switch jp := jValue.Interface().(type) {
 				case Serializer:
-					return Cmp(ip.HashCode(), jp.HashCode(), mode)
+					return compare(ip.HashCode(), jp.HashCode(), mode)
 				}
 			}
 			switch ip := iValue.Interface().(type) {
 			case fmt.Stringer:
 				switch jp := jValue.Interface().(type) {
 				case fmt.Stringer:
-					return Cmp(ip.String(), jp.String(), mode)
+					return compare(ip.String(), jp.String(), mode)
 				}
 			}
 		}
 		return Compare(iValue.Elem().Interface(), jValue.Elem().Interface(), mode)
 
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-		return Cmp(iValue.Int(), jValue.Int(), mode)
+		return compare(iValue.Int(), jValue.Int(), mode)
 
 	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
-		return Cmp(iValue.Uint(), jValue.Uint(), mode)
+		return compare(iValue.Uint(), jValue.Uint(), mode)
 
 	case reflect.Float32, reflect.Float64:
-		return Cmp(iValue.Float(), jValue.Float(), mode)
+		return compare(iValue.Float(), jValue.Float(), mode)
 
 	case reflect.Complex128, reflect.Complex64:
 		return Complex128Cmp(iValue.Complex(), jValue.Complex(), mode)
 
 	case reflect.String:
-		return Cmp(iValue.String(), jValue.String(), mode)
+		return compare(iValue.String(), jValue.String(), mode)
 
 	case reflect.Bool:
-		if mode == CmpModeEqual {
+		if mode == ModeEqual {
 			return iValue.Bool() == jValue.Bool()
 		}
 
@@ -82,45 +82,45 @@ func Compare[T any](i, j T, mode CmpMode) bool {
 	return false
 }
 
-func Cmp[T Comparable](i, j T, mode CmpMode) bool {
+func compare[T Comparable](i, j T, mode Mode) bool {
 	switch mode {
-	case CmpModeLess:
+	case ModeLess:
 		return i < j
-	case CmpModeLessEqual:
+	case ModeLessEqual:
 		return i <= j
-	case CmpModeEqual:
+	case ModeEqual:
 		return i == j
-	case CmpModeGreater:
+	case ModeGreater:
 		return i > j
-	case CmpModeGreaterEqual:
+	case ModeGreaterEqual:
 		return i >= j
 	}
 	return false
 }
 
-func Complex64Cmp(i, j complex64, mode CmpMode) bool {
+func Complex64Cmp(i, j complex64, mode Mode) bool {
 	switch mode {
-	case CmpModeLess:
+	case ModeLess:
 		return real(i) < real(j) || (real(i) == real(j) && imag(i) < imag(j))
-	case CmpModeEqual:
+	case ModeEqual:
 		return real(i) == real(j) && imag(i) == imag(j)
-	case CmpModeGreater:
+	case ModeGreater:
 		return real(i) > real(j) || (real(i) == real(j) && imag(i) > imag(j))
 	}
 	return false
 }
 
-func Complex128Cmp(i, j complex128, mode CmpMode) bool {
+func Complex128Cmp(i, j complex128, mode Mode) bool {
 	switch mode {
-	case CmpModeLess:
+	case ModeLess:
 		return real(i) < real(j) || (real(i) == real(j) && imag(i) < imag(j))
-	case CmpModeLessEqual:
+	case ModeLessEqual:
 		return real(i) <= real(j) || (real(i) == real(j) && imag(i) <= imag(j))
-	case CmpModeEqual:
+	case ModeEqual:
 		return real(i) == real(j) && imag(i) == imag(j)
-	case CmpModeGreater:
+	case ModeGreater:
 		return real(i) > real(j) || (real(i) == real(j) && imag(i) > imag(j))
-	case CmpModeGreaterEqual:
+	case ModeGreaterEqual:
 		return real(i) >= real(j) || (real(i) == real(j) && imag(i) >= imag(j))
 	}
 	return false
